@@ -83,11 +83,6 @@ cvariable b3
     dup $20 #, and if/ 1 #, b0 or!c then \ merge the second S key in with the 3st
     or ;
 
-: send   \ TX Bolt
-    b0 c@ if dup emit then drop
-    b1 c@ if dup $40 #, or emit then drop
-    b2 c@ if dup $80 #, or emit then drop
-    b3 c@ if dup $c0 #, or emit then drop ;
 
 
 \ remember the stroke
@@ -95,6 +90,7 @@ cvariable b0'
 cvariable b1'
 cvariable b2'
 cvariable b3'
+
 : keep  b0 c@ b0' c!  b1 c@ b1' c!
     b2 c@ b2' c!  b3 c@ b3' c! ;
 : recall  b0' c@ b0 c!  b1' c@ b1 c!
@@ -107,26 +103,32 @@ cvariable b3'
 
 variable same-ms
 
-: show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ . decimal same-ms @ . cr ;
-debug? [if] : send show ; [then]
+: send   \ TX Bolt
+    b0 c@ dup b0' c@ = if/ drop else emit then
+    b1 c@ dup b1' c@ = if/ drop else $40 #, or emit then
+    b2 c@ dup b2' c@ = if/ drop else $80 #, or emit then
+    b3 c@ dup b3' c@ = if/ drop else $c0 #, or emit then
+    keep ;
 
-: count-or-send invert if/ send then ;
+: show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ . decimal same-ms @ . cr ;
+debug? [if] : send show keep ; [then]
+
+: count-same-or-send send ;
 
 incremental-timeout? [if]
-: look-send look drop same invert if/ send then ;
-: same-ms++ 1 #, ms same-ms @ 1 #+
-   dup 500 #, = if/ zero look-send drop 0 #, then same-ms ! ;
+: same-ms++ 1 #, ms same-ms @ 1 #+ dup same-ms !
+   500 #, = if/ zero look drop send 0 #, same-ms ! then ;
 
-: count-or-send if/ same-ms++ ; then send 0 #, same-ms ! ;
+: count-same-or-send same if/ same-ms++ ; then send 0 #, same-ms ! ;
 [then]
 
-: scan  begin  zero  0 #, same-ms !
+: scan  begin  zero zero  0 #, same-ms !
     begin  look until/  20 #, ms look until/
     LED high,
-    begin look incremental? [if] same count-or-send keep [then] while/
+    begin look incremental? [if] count-same-or-send [then] while/
     repeat
     $20 #, b3 or!c \ add ! bit to final \ TODO send only 0 byte on incremental?
-    send  LED low, ;
+    send LED low, ;
 
 
 : go  init begin scan again
