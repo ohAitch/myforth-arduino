@@ -64,14 +64,10 @@ cvariable b3
 \ in the -colx words, yank the column high to deactivate
 : us ( n)  2* 2* for next ;
 : wait  10 #, us ;
-: +col0  PB0 low, ;
-: -col0  PB0 high, ;
-: +col1  PB1 low, ;
-: -col1  PB1 high, ;
-: +col2  PB2 low, ;
-: -col2  PB2 high, ;
-: +col3  PB3 low, ;
-: -col3  PB3 high, ;
+: +col0  PB0 low, ;  : -col0  PB0 high, ;
+: +col1  PB1 low, ;  : -col1  PB1 high, ;
+: +col2  PB2 low, ;  : -col2  PB2 high, ;
+: +col3  PB3 low, ;  : -col3  PB3 high, ;
 
 : read ( - b)  0 #,  PINC T in,  $3f #, xor ;
 
