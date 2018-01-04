@@ -108,40 +108,14 @@ cvariable b3'
 : zero  keep
     b0 a! 0 #, dup c!+ dup c!+ dup c!+ c!+ ;
 
-variable repeating
-variable timing
-variable short
-: norepeat  zero keep 0 #,
-    dup timing ! dup repeating ! short ! ;
-
-\ check for release every ms or so.
-\ when keys are released exit two levels up
-\ to avoid the unnecessary send
-: check ( n)  for 4000 #, for next
-    look 0= if/  norepeat pop drop ; then next ;
-
-: threshold (  - n)  3000 #, ;
-: sub-threshold (  - n)  750 #, ;
-
-\ only a very short first tap allows a repeat
-: ?short  timing @ sub-threshold - 0< short ! ;    
-
-: timeout? ( - ?)  1 #, timing @ + dup timing !
-    threshold swap - 0<  same and  short @ and ;
-    
-: ?repeat  repeating @ if/  100 #, check recall send ; then
-    timeout? if/  -1 #, repeating ! keep then ;
-
 : scan  begin  zero 
-    0 #, dup timing ! repeating !
     begin  look until/  20 #, ms look until/
     LED high,
-    begin  look while/ 
-key-repeat? [if]  ?repeat  [then]
+    begin look same 0= if/ send then keep while/
     repeat  
-key-repeat? [if]  ?short  [then]
+    $20 #, b3 or!c \ add ! bit to final
     send  LED low, ;
 
-: go  init norepeat 
-    begin scan again
+
+: go  init begin scan again
 
