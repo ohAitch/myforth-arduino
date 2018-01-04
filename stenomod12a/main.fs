@@ -32,26 +32,11 @@ For LGPL information:   http://www.gnu.org/copyleft/lesser.txt
 \       2    K O P D
 \       3    P * B Z
 \       4    W E L #
-\       5    H U G S1
-
-\ Gemini protocol will require some shuffling
-
-\ byte->   0   1   2   3   4   5
-\ -------------------------------
-\ bit  7)  1   0   0   0   0   0
-\      6)  0   S1  R-  0   -P  0
-\      5)  0   S2  A-  0   -B  0
-\      4)  0   T-  O-  0   -L  0
-\      3)  0   K-  *1  -E  -G  0
-\      2)  0   P-  0   -U  -T  0
-\      1)  0   W-  0   -F  -S  #C
-\      0)  0   H-  0   -R  -D  -Z
-
+\       5    H U G !
 
 \ begin configuration
 false value key-repeat?   \ allow strokes to repeat if held
 true value merge-S?      \ merge the split S keys into one
-false value gemini?      \ choose the protocol
 \ end configuration
 
 : ms ( n)  for 4000 #, for next next ;
@@ -106,64 +91,12 @@ merge-S? [if]  \ merge the second S key in with the 1st
      \ drop $1f #, and dup \ ***
     b3 or!c -col0 or ;
 
-gemini? [if]  \ define "send" in Gemini or TX
-
-\ b accumulates bits for next byte in protocol
-\ md is the bit mask for destination
-\ ms is the bit mask for source
-\ a is the address of the input variable
-\ so shuffle moves a bit into a new position and
-\ and leaves it in an accumulator at the top of the stack
-: shuffle ( b md ms a - b')
-    c@ and if/  or ; then  drop ;
-
-: send   \ Gemini PR
-    $80 #, emit
-    0 #, 
-       $40 #, $20 #, b3 shuffle \ S1
-       $20 #, $01 #, b0 shuffle \ S2
-       $10 #, $02 #, b0 shuffle \ T-
-       $08 #, $04 #, b0 shuffle \ K-
-       $04 #, $08 #, b0 shuffle \ P-
-       $02 #, $10 #, b0 shuffle \ W-
-       $01 #, $20 #, b0 shuffle \ H-
-       emit
-    0 #,
-       $40 #, $01 #, b1 shuffle \ R-
-       $20 #, $02 #, b1 shuffle \ A-
-       $10 #, $04 #, b1 shuffle \ O-
-       $08 #, $08 #, b1 shuffle \ *1
-       emit
-    0 #,
-       $08 #, $10 #, b1 shuffle \ -E
-       $04 #, $20 #, b1 shuffle \ -U
-       $02 #, $01 #, b2 shuffle \ -F
-       $01 #, $02 #, b2 shuffle \ -R
-       emit
-    0 #,
-       $40 #, $04 #, b2 shuffle \ -P
-       $20 #, $08 #, b2 shuffle \ -B
-       $10 #, $10 #, b2 shuffle \ -L
-       $08 #, $20 #, b2 shuffle \ -G
-       $04 #, $01 #, b3 shuffle \ -T
-       $02 #, $02 #, b3 shuffle \ -S
-       $01 #, $04 #, b3 shuffle \ -D
-       emit
-    0 #,
-       $02 #, $10 #, b3 shuffle \ #C
-       $01 #, $08 #, b3 shuffle \ -Z
-       emit
-    ;
-
-[else]
-
 : send   \ TX Bolt
     b0 c@ if dup emit then drop
     b1 c@ if dup $40 #, or emit then drop
     b2 c@ if dup $80 #, or emit then drop
     b3 c@ if $c0 #, or then emit ;
 
-[then]
 
 \ remember the stroke
 cvariable b0'
