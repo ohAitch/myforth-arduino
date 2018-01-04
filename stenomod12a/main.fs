@@ -36,6 +36,8 @@ For LGPL information:   http://www.gnu.org/copyleft/lesser.txt
 
 \ begin configuration
 true value debug?        \ show instead of sending
+true value incremental?         \ send partial strokes without release
+true value incremental-timeout? \ unpress keys after 500ms at rest
 \ end configuration
 
 : ms ( n)  for 4000 #, for next next ;
@@ -108,15 +110,20 @@ variable same-ms
 : show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ . decimal same-ms @ . cr ;
 debug? [if] : send show ; [then]
 
+: count-or-send invert if/ send then ;
+
+incremental-timeout? [if]
 : look-send look drop same invert if/ send then ;
 : same-ms++ 1 #, ms same-ms @ 1 #+
-  dup 500 #, = if/ zero look-send drop 0 #, then same-ms ! ;
+   dup 500 #, = if/ zero look-send drop 0 #, then same-ms ! ;
 
 : count-or-send if/ same-ms++ ; then send 0 #, same-ms ! ;
+[then]
+
 : scan  begin  zero  0 #, same-ms !
     begin  look until/  20 #, ms look until/
     LED high,
-    begin look same count-or-send keep while/
+    begin look incremental? [if] same count-or-send keep [then] while/
     repeat
     $20 #, b3 or!c \ add ! bit to final
     send  LED low, ;
