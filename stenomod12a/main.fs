@@ -85,7 +85,7 @@ cvariable b3
     b0 c@ if dup emit then drop
     b1 c@ if dup $40 #, or emit then drop
     b2 c@ if dup $80 #, or emit then drop
-    b3 c@ if $c0 #, or then emit ;
+    b3 c@ if dup $c0 #, or emit then drop ;
 
 
 \ remember the stroke
