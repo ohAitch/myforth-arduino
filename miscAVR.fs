@@ -69,6 +69,7 @@ nowarn
         begin >r org r@ rjmp, r> org host exit target then
     begin >r dup org r@  rel $7f and
     3 lshift over @-t $fc07 and or swap !-t  r> org  m;
+:m else ( adr - adr) ahead [ swap ] then m;
 
 \ each of the following matches up with "then" for a short relative jump
 :m if ( - adr)  0 T adiw,  ( here) begin dup rel $7f and breq,  m;

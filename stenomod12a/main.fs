@@ -35,7 +35,7 @@ For LGPL information:   http://www.gnu.org/copyleft/lesser.txt
 \       5    H U G !
 
 \ begin configuration
-true value debug?        \ show instead of sending
+false value debug?              \ show instead of sending
 true value incremental?         \ send partial strokes without release
 true value incremental-timeout? \ unpress keys after 500ms at rest
 \ end configuration
@@ -125,7 +125,7 @@ incremental-timeout? [if]
     LED high,
     begin look incremental? [if] same count-or-send keep [then] while/
     repeat
-    $20 #, b3 or!c \ add ! bit to final
+    $20 #, b3 or!c \ add ! bit to final \ TODO send only 0 byte on incremental?
     send  LED low, ;
 
 
