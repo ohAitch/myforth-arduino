@@ -36,7 +36,6 @@ For LGPL information:   http://www.gnu.org/copyleft/lesser.txt
 
 \ begin configuration
 false value key-repeat?   \ allow strokes to repeat if held
-true value merge-S?      \ merge the split S keys into one
 \ end configuration
 
 : ms ( n)  for 4000 #, for next next ;
@@ -82,14 +81,9 @@ cvariable b3
     +col3 wait read dup b0 or!c -col3
     +col2 wait read dup b1 or!c -col2 or
     +col1 wait read dup b2 or!c -col1 or
-    +col0 wait read dup 
-merge-S? [if]  \ merge the second S key in with the 1st
-    $20 #, and if/  1 #, b0 or!c then
-    dup $1f #, and
-[then]
-\ *** just disable the extra key...
-     \ drop $1f #, and dup \ ***
-    b3 or!c -col0 or ;
+    +col0 wait read dup $1f #, and b3 or!c -col0
+    dup $20 #, and if/ 1 #, b0 or!c then \ merge the second S key in with the 3st
+    or ;
 
 : send   \ TX Bolt
     b0 c@ if dup emit then drop
