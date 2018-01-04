@@ -36,6 +36,7 @@ For LGPL information:   http://www.gnu.org/copyleft/lesser.txt
 
 \ begin configuration
 false value key-repeat?   \ allow strokes to repeat if held
+true value debug?        \ show instead of sending
 \ end configuration
 
 : ms ( n)  for 4000 #, for next next ;
@@ -91,6 +92,10 @@ cvariable b3
     b2 c@ if dup $80 #, or emit then drop
     b3 c@ if $c0 #, or then emit ;
 
+
+: show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ .  cr ;
+
+debug? [if] : send show ; [then]
 
 \ remember the stroke
 cvariable b0'
