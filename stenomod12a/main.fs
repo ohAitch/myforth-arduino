@@ -35,7 +35,6 @@ For LGPL information:   http://www.gnu.org/copyleft/lesser.txt
 \       5    H U G !
 
 \ begin configuration
-false value key-repeat?   \ allow strokes to repeat if held
 true value debug?        \ show instead of sending
 \ end configuration
 
@@ -89,10 +88,6 @@ cvariable b3
     b3 c@ if $c0 #, or then emit ;
 
 
-: show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ .  cr ;
-
-debug? [if] : send show ; [then]
-
 \ remember the stroke
 cvariable b0'
 cvariable b1'
@@ -108,11 +103,21 @@ cvariable b3'
 : zero  keep
     b0 a! 0 #, dup c!+ dup c!+ dup c!+ c!+ ;
 
-: scan  begin  zero 
+variable same-ms
+
+: show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ . decimal same-ms @ . cr ;
+debug? [if] : send show ; [then]
+
+: look-send look drop same invert if/ send then ;
+: same-ms++ 1 #, ms same-ms @ 1 #+
+  dup 500 #, = if/ zero look-send drop 0 #, then same-ms ! ;
+
+: count-or-send if/ same-ms++ ; then send 0 #, same-ms ! ;
+: scan  begin  zero  0 #, same-ms !
     begin  look until/  20 #, ms look until/
     LED high,
-    begin look same 0= if/ send then keep while/
-    repeat  
+    begin look same count-or-send keep while/
+    repeat
     $20 #, b3 or!c \ add ! bit to final
     send  LED low, ;
 
