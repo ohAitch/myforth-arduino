@@ -76,10 +76,10 @@ cvariable b3
 \ before reading the next one
 : or!c ( n a - )  swap over c@ or swap c! ;
 : look ( - flag)
-    +col3 wait read dup b0 or!c -col3
-    +col2 wait read dup b1 or!c -col2 or
-    +col1 wait read dup b2 or!c -col1 or
-    +col0 wait read dup $1f #, and b3 or!c -col0
+    +col3 wait read dup b0 c! -col3
+    +col2 wait read dup b1 c! -col2 or
+    +col1 wait read dup b2 c! -col1 or
+    +col0 wait read dup $1f #, and b3 c! -col0
     dup $20 #, and if/ 1 #, b0 or!c then \ merge the second S key in with the 3st
     or ;
 
@@ -93,12 +93,23 @@ cvariable b3'
 
 : keep  b0 c@ b0' c!  b1 c@ b1' c!
     b2 c@ b2' c!  b3 c@ b3' c! ;
-: recall  b0' c@ b0 c!  b1' c@ b1 c!
-    b2' c@ b2 c!  b3' c@ b3 c! ;
+: recall  b0' c@ b0 or!c  b1' c@ b1 or!c
+    b2' c@ b2 or!c  b3' c@ b3 or!c ;
 : same ( - f)  b0 c@ b0' c@ =  b1 c@ b1' c@ = and
     b2 c@ b2' c@ = and  b3 c@ b3' c@ = and ;
 
-: zero  keep
+\ remember current held
+cvariable b0_
+cvariable b1_
+cvariable b2_
+cvariable b3_
+
+: keep_  b0 c@ b0_ c!  b1 c@ b1_ c!
+    b2 c@ b2_ c!  b3 c@ b3_ c! ;
+: same_ ( - f)  b0 c@ b0_ c@ =  b1 c@ b1_ c@ = and
+    b2 c@ b2_ c@ = and  b3 c@ b3_ c@ = and ;
+
+: zero
     b0 a! 0 #, dup c!+ dup c!+ dup c!+ c!+ ;
 
 variable same-ms
@@ -110,24 +121,30 @@ variable same-ms
     b3 c@ dup b3' c@ = if/ drop else $c0 #, or emit then
     keep ;
 
-: show  hex  b0 c@ .  b1 c@ .  b2 c@ .  b3 c@ . decimal same-ms @ . cr ;
-debug? [if] : send show keep ; [then]
+: show  hex
+    b0 c@ b0' c@ over = if/ drop -1 #, then .
+    b1 c@ b1' c@ over = if/ drop -1 #, then .
+    b2 c@ b2' c@ over = if/ drop -1 #, then .
+    b3 c@ b3' c@ over = if/ drop -1 #, then .
+    decimal same-ms @ . cr ;
+
+debug? [if] : send same if/ ; then show keep ; [then]
 
 : count-same-or-send send ;
 
 incremental-timeout? [if]
 : same-ms++ 1 #, ms same-ms @ 1 #+ dup same-ms !
-   500 #, = if/ zero look drop send 0 #, same-ms ! then ;
+   500 #, = if/ zero look drop send keep_ 0 #, same-ms ! then ;
 
-: count-same-or-send same if/ same-ms++ ; then send 0 #, same-ms ! ;
+: count-same-or-send same_ if/ same-ms++ ; then keep_ recall send 0 #, same-ms ! ;
 [then]
 
-: scan  begin  zero zero  0 #, same-ms !
+: scan  begin  zero keep keep_ 0 #, same-ms !
     begin  look until/  20 #, ms look until/
     LED high,
     begin look incremental? [if] count-same-or-send [then] while/
     repeat
-    $20 #, b3 or!c \ add ! bit to final \ TODO send only 0 byte on incremental?
+    $20 #, b3 or!c \ add ! bit to final
     send LED low, ;
 
 
